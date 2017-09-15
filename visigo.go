@@ -1,12 +1,12 @@
 package visigo
 
 import (
+	"github.com/clarkduvall/hyperloglog"
+	"github.com/go-errors/errors"
+	"github.com/tomasen/realip"
+	"hash/fnv"
 	"net/http"
 	"net/url"
-	"github.com/clarkduvall/hyperloglog"
-	"hash/fnv"
-	"github.com/tomasen/realip"
-	"github.com/go-errors/errors"
 )
 
 const (
@@ -26,7 +26,7 @@ func (hip *hashableIp) Sum64() uint64 {
 var counter map[*url.URL]*hyperloglog.HyperLogLogPlus
 
 // VisigoError - error returned when you try to get count but didn't register middleware
-var VisigoError = errors.New("Count not found or error in HyperLogLog")
+var ErrCount = errors.New("Count not found or error in HyperLogLog")
 
 // Visits - get visits for given URL
 func Visits(u *url.URL) (uint64, error) {
@@ -37,7 +37,7 @@ func Visits(u *url.URL) (uint64, error) {
 	if hll, found := counter[u]; found {
 		return hll.Count(), nil
 	}
-	return 0, VisigoError
+	return 0, ErrCount
 }
 
 // Counter - registers middleware for visits counting

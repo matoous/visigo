@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/matoous/visigo"
 	"net/http"
-	"fmt"
 )
 
 func main() {
@@ -14,7 +14,7 @@ func main() {
 }
 
 func final(w http.ResponseWriter, r *http.Request) {
-	count := visigo.Visits(r)
+	count, _ := visigo.Visits(r.URL)
 	response := fmt.Sprintf("This page was viewed %d times", count)
 	w.Write([]byte(response))
 }

@@ -1,8 +1,8 @@
 package visigo
 
 import (
-	"testing"
 	"net/http"
+	"testing"
 )
 
 func assertPanic(t *testing.T, f func()) {
