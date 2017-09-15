@@ -25,7 +25,7 @@ func (hip *hashableIp) Sum64() uint64 {
 
 var counter map[*url.URL]*hyperloglog.HyperLogLogPlus
 
-// VisigoError - error returned when you try to get count but didn't register middleware
+// ErrCount - error returned when you try to get count but didn't register middleware
 var ErrCount = errors.New("Count not found or error in HyperLogLog")
 
 // Visits - get visits for given URL

@@ -3,7 +3,7 @@
 [![GoDoc](https://godoc.org/github.com/matoous/visigo?status.svg)](https://godoc.org/github.com/matoous/visigo) [![Go Report Card](https://goreportcard.com/badge/github.com/matoous/visigo)](https://goreportcard.com/report/github.com/matoous/visigo) [![GitHub issues](https://img.shields.io/github/issues/matoous/visigo.svg)](https://github.com/matoous/visigo/issues) [![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)](https://github.com/matoous/visigo/LICENSE)
 
 
-**Visigo** is http middleware for page visits counting. It uses HyperLogLog as 
+**Visigo** is http middleware for page unique visits counting. It uses HyperLogLog as 
 a counter, so it's pretty fast.
 
 **Warning:** Visigo stores HyperLogLog++ in *map*, so this implementation

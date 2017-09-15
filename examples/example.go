@@ -15,6 +15,6 @@ func main() {
 
 func final(w http.ResponseWriter, r *http.Request) {
 	count, _ := visigo.Visits(r.URL)
-	response := fmt.Sprintf("This page was viewed %d times", count)
+	response := fmt.Sprintf("This page was viewed by %d unique users", count)
 	w.Write([]byte(response))
 }
