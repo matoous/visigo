@@ -23,7 +23,7 @@ func (hip *hashableIp) Sum64() uint64 {
 	return h.Sum64()
 }
 
-var counter map[*url.URL]*hyperloglog.HyperLogLogPlus
+var counter map[url.URL]*hyperloglog.HyperLogLogPlus
 
 // ErrCount - error returned when you try to get count but didn't register middleware
 var ErrCount = errors.New("Count not found or error in HyperLogLog")
@@ -42,16 +42,16 @@ func Visits(u *url.URL) (uint64, error) {
 
 // Counter - registers middleware for visits counting
 func Counter(next http.Handler) http.Handler {
-	counter = make(map[*url.URL]*hyperloglog.HyperLogLogPlus)
+	counter = make(map[url.URL]*hyperloglog.HyperLogLogPlus)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if hll, found := counter[r.URL]; !found {
+		if hll, found := counter[*r.URL]; !found {
 			// get hyperloglog or fail silently
 			if l, err := hyperloglog.NewPlus(defaultPrecision); err == nil {
 				ip := &hashableIp{
 					realIp: []byte(realip.RealIP(r)),
 				}
 				l.Add(ip)
-				counter[r.URL] = l
+				counter[*r.URL] = l
 			}
 		} else {
 			// it's perfectly fine to omit map assignment since it is a pointer
