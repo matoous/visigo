@@ -44,7 +44,7 @@ func Visits(u *url.URL) (uint64, error) {
 func Counter(next http.Handler) http.Handler {
 	counter = make(map[string]*hyperloglog.HyperLogLogPlus)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if hll, found := counter[*r.URL]; !found {
+		if hll, found := counter[r.URL.String()]; !found {
 			// get hyperloglog or fail silently
 			if l, err := hyperloglog.NewPlus(defaultPrecision); err == nil {
 				ip := &hashableIp{
