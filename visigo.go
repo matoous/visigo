@@ -34,7 +34,7 @@ func Visits(u *url.URL) (uint64, error) {
 		// no, you didn't ...
 		panic("You need to register Visigo Counter first!")
 	}
-	if hll, found := counter[u]; found {
+	if hll, found := counter[*u]; found {
 		return hll.Count(), nil
 	}
 	return 0, ErrCount
