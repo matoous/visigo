@@ -1,6 +1,7 @@
 # Visigo
 
-[![GoDoc](https://godoc.org/github.com/matoous/visigo?status.svg)](https://godoc.org/github.com/matoous/visigo) [![Go Report Card](https://goreportcard.com/badge/github.com/matoous/visigo)](https://goreportcard.com/report/github.com/matoous/visigo) [![GitHub issues](https://img.shields.io/github/issues/matoous/visigo.svg)](https://github.com/matoous/visigo/issues) [![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)](https://github.com/matoous/visigo/LICENSE)
+
+[![Build Status](https://travis-ci.org/matoous/visigo.svg?branch=master)](https://travis-ci.org/matoous/visigo) [![GoDoc](https://godoc.org/github.com/matoous/visigo?status.svg)](https://godoc.org/github.com/matoous/visigo) [![Go Report Card](https://goreportcard.com/badge/github.com/matoous/visigo)](https://goreportcard.com/report/github.com/matoous/visigo) [![GitHub issues](https://img.shields.io/github/issues/matoous/visigo.svg)](https://github.com/matoous/visigo/issues) [![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)](https://github.com/matoous/visigo/LICENSE)
 
 
 **Visigo** is http middleware for page unique visits counting. It uses HyperLogLog as 
@@ -43,7 +44,7 @@ func main() {
 
 func final(w http.ResponseWriter, r *http.Request) {
 	count := visigo.Visits(r)
-	response := fmt.Sprintf("This page was viewed %d times", count)
+	response := fmt.Sprintf("This page was viewed by %d unique visitors", count)
 	w.Write([]byte(response))
 }
 ```
