@@ -42,7 +42,8 @@ func TestVisits(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	
+        // accuracy better than 2%
 	closeTo := func(num uint64, to uint64) bool {
 		return num > (to - ((to/100)*2)) && num < (to + ((to/100)*2))
 	}
