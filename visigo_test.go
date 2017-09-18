@@ -44,7 +44,9 @@ func TestVisits(t *testing.T) {
 	}
 
 	closeTo := func(num uint64, to uint64) bool {
-		return num > (to - ((to/100)*2)) && num < (to + ((to/100)*2))
+		a := float32(num)
+		b := float32(to)
+		return a > (b - (b*0.02)) && a < (b + (b*0.02))
 	}
 
 	// new request generating function
@@ -58,13 +60,17 @@ func TestVisits(t *testing.T) {
 	handler := Counter(http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {}))
 	rec := httptest.NewRecorder()
 
-	// test
-	for i := 0; i < 100000; i++ {
-		handler.ServeHTTP(rec, newRequest())
+	// test up to 1 000 000
+	var limit uint64 = rand.Uint64() & 15
+	for i := uint64(0); limit < 1000000; {
+		for ; i < limit; i++ {
+			handler.ServeHTTP(rec, newRequest())
+		}
+		cnt, err := Visits(uri)
+		if err != nil {
+			log.Fatal(err)
+		}
+		assert.Equal(t, closeTo(cnt, limit), true, fmt.Sprintf("Excpected: %v visits, got: %v", cnt, limit))
+		limit *= rand.Uint64() & 15
 	}
-	cnt, err := Visits(uri)
-	if err != nil {
-		log.Fatal(err)
-	}
-	assert.Equal(t, closeTo(cnt, 100000), true, fmt.Sprintf("Excpected: %v visits, got: %v", cnt, 100000))
 }
