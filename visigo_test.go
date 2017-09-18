@@ -43,6 +43,7 @@ func TestVisits(t *testing.T) {
 		log.Fatal(err)
 	}
 
+        // accuracy better than 2%
 	closeTo := func(num uint64, to uint64) bool {
 		a := float32(num)
 		b := float32(to)
