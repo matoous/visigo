@@ -43,7 +43,7 @@ func TestVisits(t *testing.T) {
 		log.Fatal(err)
 	}
 
-        // accuracy better than 2%
+	// accuracy better than 2%
 	closeTo := func(num uint64, to uint64) bool {
 		a := float32(num)
 		b := float32(to)
@@ -62,7 +62,7 @@ func TestVisits(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	// test up to 1 000 000
-	var limit uint64 = rand.Uint64() & 15
+	var limit uint64 = 90
 	for i := uint64(0); limit < 1000000; {
 		for ; i < limit; i++ {
 			handler.ServeHTTP(rec, newRequest())
@@ -72,6 +72,6 @@ func TestVisits(t *testing.T) {
 			log.Fatal(err)
 		}
 		assert.Equal(t, closeTo(cnt, limit), true, fmt.Sprintf("Excpected: %v visits, got: %v", cnt, limit))
-		limit *= rand.Uint64() & 15
+		limit *= 9
 	}
 }
