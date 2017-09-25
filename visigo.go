@@ -2,7 +2,7 @@ package visigo
 
 import (
 	"github.com/clarkduvall/hyperloglog"
-	"github.com/go-errors/errors"
+	"errors"
 	"github.com/tomasen/realip"
 	"hash/fnv"
 	"net/http"
