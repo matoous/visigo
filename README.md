@@ -1,7 +1,12 @@
 # Visigo
 
 
-[![Build Status](https://travis-ci.org/matoous/visigo.svg?branch=master)](https://travis-ci.org/matoous/visigo) [![GoDoc](https://godoc.org/github.com/matoous/visigo?status.svg)](https://godoc.org/github.com/matoous/visigo) [![Go Report Card](https://goreportcard.com/badge/github.com/matoous/visigo)](https://goreportcard.com/report/github.com/matoous/visigo) [![GitHub issues](https://img.shields.io/github/issues/matoous/visigo.svg)](https://github.com/matoous/visigo/issues) [![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)](https://github.com/matoous/visigo/LICENSE)
+[![Build Status](https://github.com/matoous/visigo/workflows/Tests/badge.svg)](https://github.com/matoous/visigo/actions) 
+[![Build Status](https://github.com/matoous/visigo/workflows/Lint/badge.svg)](https://github.com/matoous/visigo/actions) 
+[![GoDoc](https://godoc.org/github.com/matoous/visigo?status.svg)](https://godoc.org/github.com/matoous/visigo)
+[![Go Report Card](https://goreportcard.com/badge/github.com/matoous/visigo)](https://goreportcard.com/report/github.com/matoous/visigo)
+[![GitHub issues](https://img.shields.io/github/issues/matoous/visigo.svg)](https://github.com/matoous/visigo/issues)
+[![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)](https://github.com/matoous/visigo/LICENSE)
 
 
 **Visigo** is http middleware for page unique visits counting. It uses HyperLogLog as 
@@ -38,7 +43,8 @@ import "github.com/matoous/visigo"
 func main() {
 	finalHandler := http.HandlerFunc(final)
 
-	http.Handle("/", visigo.Counter(finalHandler))
+	http.Handle("/", visigo.Counter(final))
+	http.Handle("/total", visigo.Counter(total))
 	http.ListenAndServe(":3000", nil)
 }
 
@@ -47,12 +53,18 @@ func final(w http.ResponseWriter, r *http.Request) {
 	response := fmt.Sprintf("This page was viewed by %d unique visitors", count)
 	w.Write([]byte(response))
 }
+
+func total(w http.ResponseWriter, r *http.Request) {
+	count, _ := visigo.TotalVisits()
+	response := fmt.Sprintf("This website had %d unique visitors in total", count)
+	w.Write([]byte(response))
+}
 ```
 
 ## Testing
 
 ``` bash
-$ go test -c -i -o /tmp/TestGenerate_in_gonanoid_test_gogo gonanoid
+$ go test ./...
 ```
 
 ## Notice
@@ -60,10 +72,6 @@ $ go test -c -i -o /tmp/TestGenerate_in_gonanoid_test_gogo gonanoid
 If you use **Visigo** on your site or in your project, please let me know!
 
 If you have any issues, just feel free and open it in this repository, thanks!
-
-## Credits
-
-- [clarkduvall](https://github.com/clarkduvall) - [HyperLogLog](https://github.com/clarkduvall/hyperloglog)
 
 ## License
 
