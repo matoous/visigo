@@ -3,7 +3,6 @@ package visigo
 import (
 	"errors"
 	"net/http"
-	"net/url"
 
 	"github.com/axiomhq/hyperloglog"
 	"github.com/tomasen/realip"
@@ -15,12 +14,12 @@ var counter map[string]*hyperloglog.Sketch
 var ErrCount = errors.New("count not found or error in HyperLogLog")
 
 // Visits - get visits for given URL
-func Visits(u *url.URL) (uint64, error) {
+func Visits(r *http.Request) (uint64, error) {
 	if counter == nil {
 		// no, you didn't ...
 		panic("you need to register Visigo Counter first!")
 	}
-	if hll, found := counter[u.String()]; found {
+	if hll, found := counter[r.URL.String()]; found {
 		return hll.Estimate(), nil
 	}
 	return 0, ErrCount

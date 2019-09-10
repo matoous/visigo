@@ -2,7 +2,6 @@ package visigo
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -14,21 +13,18 @@ import (
 )
 
 // newRequest is helper function for testing, it creates new request from given IP to given URL.
-func newRequest(ip string, url *url.URL) *http.Request {
+func newRequest(ip string, uri *url.URL) *http.Request {
 	return &http.Request{
 		RemoteAddr: ip,
-		URL:        url,
+		URL:        uri,
 	}
 }
 
 func TestPanics(t *testing.T) {
-	uri, err := url.Parse("/1")
-	if err != nil {
-		assert.NoError(t, err, "must parse url")
-	}
+	req := httptest.NewRequest("GET", "/", nil)
 
 	assert.Panics(t, func() {
-		_, _ = Visits(uri)
+		_, _ = Visits(req)
 	}, "should panic if the middleware is not registered and count function is called")
 }
 
@@ -37,8 +33,9 @@ func TestVisits(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 
 	// random ip generating function
-	randomIp := func() string {
+	randomIP := func() string {
 		tokens := make([]byte, 4)
+		//nolint:gosec
 		rand.Read(tokens)
 		return fmt.Sprintf("%v.%v.%v.%v", tokens[0], tokens[1], tokens[2], tokens[3])
 	}
@@ -46,7 +43,7 @@ func TestVisits(t *testing.T) {
 	// some url
 	uri, err := url.Parse("/")
 	if err != nil {
-		log.Fatal(err)
+		assert.NoError(t, err, "must parse url")
 	}
 
 	// accuracy better than 2%
@@ -63,12 +60,10 @@ func TestVisits(t *testing.T) {
 	var limit uint64 = 90
 	for i := uint64(0); limit < 1000000; {
 		for ; i < limit; i++ {
-			handler.ServeHTTP(rec, newRequest(randomIp(), uri))
+			handler.ServeHTTP(rec, newRequest(randomIP(), uri))
 		}
-		cnt, err := Visits(uri)
-		if err != nil {
-			log.Fatal(err)
-		}
+		cnt, err := Visits(newRequest(randomIP(), uri))
+		assert.NoError(t, err, "should not return error")
 		assert.Equal(t, closeTo(cnt, limit), true, fmt.Sprintf("Excpected: %v visits, got: %v", cnt, limit))
 		limit *= 9
 	}

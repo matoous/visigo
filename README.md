@@ -38,18 +38,23 @@ $ go get github.com/matoous/visigo
 
 
 ``` go
-import "github.com/matoous/visigo"
+package main
+
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/matoous/visigo"
+)
 
 func main() {
-	finalHandler := http.HandlerFunc(final)
-
-	http.Handle("/", visigo.Counter(final))
-	http.Handle("/total", visigo.Counter(total))
+	http.Handle("/", visigo.Counter(http.HandlerFunc(final)))
+	http.Handle("/total", visigo.Counter(http.HandlerFunc(total)))
 	http.ListenAndServe(":3000", nil)
 }
 
 func final(w http.ResponseWriter, r *http.Request) {
-	count := visigo.Visits(r)
+	count, _ := visigo.Visits(r)
 	response := fmt.Sprintf("This page was viewed by %d unique visitors", count)
 	w.Write([]byte(response))
 }

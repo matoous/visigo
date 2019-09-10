@@ -2,19 +2,25 @@ package main
 
 import (
 	"fmt"
-	"github.com/matoous/visigo"
 	"net/http"
+
+	"github.com/matoous/visigo"
 )
 
 func main() {
-	finalHandler := http.HandlerFunc(final)
-
-	http.Handle("/", visigo.Counter(finalHandler))
-	http.ListenAndServe(":3000", nil)
+	http.Handle("/", visigo.Counter(http.HandlerFunc(final)))
+	http.Handle("/total", visigo.Counter(http.HandlerFunc(total)))
+	_ = http.ListenAndServe(":3000", nil)
 }
 
 func final(w http.ResponseWriter, r *http.Request) {
-	count, _ := visigo.Visits(r.URL)
-	response := fmt.Sprintf("This page was viewed by %d unique users", count)
-	w.Write([]byte(response))
+	count, _ := visigo.Visits(r)
+	response := fmt.Sprintf("This page was viewed by %d unique visitors", count)
+	_, _ = w.Write([]byte(response))
+}
+
+func total(w http.ResponseWriter, _ *http.Request) {
+	count, _ := visigo.TotalVisits()
+	response := fmt.Sprintf("This website had %d unique visitors in total", count)
+	_, _ = w.Write([]byte(response))
 }
