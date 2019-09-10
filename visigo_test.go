@@ -1,29 +1,35 @@
 package visigo
 
 import (
-	"net/http"
-	"testing"
-	"time"
-	"math/rand"
 	"fmt"
+	"log"
+	"math/rand"
+	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"log"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPanics(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic")
-		}
-	}()
-
-	req, err := http.NewRequest("GET", "/", nil)
-	if err != nil {
-		t.Fatal(err)
+// newRequest is helper function for testing, it creates new request from given IP to given URL.
+func newRequest(ip string, url *url.URL) *http.Request {
+	return &http.Request{
+		RemoteAddr: ip,
+		URL:        url,
 	}
-	Visits(req.URL)
+}
+
+func TestPanics(t *testing.T) {
+	uri, err := url.Parse("/1")
+	if err != nil {
+		assert.NoError(t, err, "must parse url")
+	}
+
+	assert.Panics(t, func() {
+		_, _ = Visits(uri)
+	}, "should panic if the middleware is not registered and count function is called")
 }
 
 func TestVisits(t *testing.T) {
@@ -47,25 +53,17 @@ func TestVisits(t *testing.T) {
 	closeTo := func(num uint64, to uint64) bool {
 		a := float32(num)
 		b := float32(to)
-		return a > (b - (b*0.02)) && a < (b + (b*0.02))
+		return a > (b-(b*0.02)) && a < (b+(b*0.02))
 	}
 
-	// new request generating function
-	newRequest := func() *http.Request {
-		return &http.Request{
-			RemoteAddr: randomIp(),
-			URL: uri,
-		}
-	}
-
-	handler := Counter(http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {}))
+	handler := Counter(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 	rec := httptest.NewRecorder()
 
 	// test up to 1 000 000
 	var limit uint64 = 90
 	for i := uint64(0); limit < 1000000; {
 		for ; i < limit; i++ {
-			handler.ServeHTTP(rec, newRequest())
+			handler.ServeHTTP(rec, newRequest(randomIp(), uri))
 		}
 		cnt, err := Visits(uri)
 		if err != nil {
@@ -74,4 +72,34 @@ func TestVisits(t *testing.T) {
 		assert.Equal(t, closeTo(cnt, limit), true, fmt.Sprintf("Excpected: %v visits, got: %v", cnt, limit))
 		limit *= 9
 	}
+}
+
+func TestTotalVisits(t *testing.T) {
+	uri1, err := url.Parse("/1")
+	if err != nil {
+		assert.NoError(t, err, "must parse url")
+	}
+	uri2, err := url.Parse("/2")
+	if err != nil {
+		assert.NoError(t, err, "must parse url")
+	}
+
+	t.Run("counts multiple paths", func(t *testing.T) {
+		handler := Counter(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, newRequest("1.1.1.1", uri1))
+		handler.ServeHTTP(rec, newRequest("2.2.2.2", uri2))
+		total, err := TotalVisits()
+		assert.NoError(t, err, "should not return error")
+		assert.Equal(t, uint64(2), total, "should count distinct IPs over all paths")
+	})
+	t.Run("merges hyperloglogs", func(t *testing.T) {
+		handler := Counter(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, newRequest("1.1.1.1", uri1))
+		handler.ServeHTTP(rec, newRequest("1.1.1.1", uri2))
+		total, err := TotalVisits()
+		assert.NoError(t, err, "should not return error")
+		assert.Equal(t, uint64(1), total, "should merge the logs and count only distinct IPs")
+	})
 }

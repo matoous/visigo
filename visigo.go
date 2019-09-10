@@ -1,66 +1,53 @@
 package visigo
 
 import (
-	"github.com/clarkduvall/hyperloglog"
 	"errors"
-	"github.com/tomasen/realip"
-	"hash/fnv"
 	"net/http"
 	"net/url"
+
+	"github.com/axiomhq/hyperloglog"
+	"github.com/tomasen/realip"
 )
 
-const (
-	defaultPrecision = 18
-)
-
-type hashableIp struct {
-	realIp []byte
-}
-
-func (hip *hashableIp) Sum64() uint64 {
-	h := fnv.New64a()
-	h.Write(hip.realIp)
-	return h.Sum64()
-}
-
-var counter map[string]*hyperloglog.HyperLogLogPlus
+var counter map[string]*hyperloglog.Sketch
 
 // ErrCount - error returned when you try to get count but didn't register middleware
-var ErrCount = errors.New("Count not found or error in HyperLogLog")
+var ErrCount = errors.New("count not found or error in HyperLogLog")
 
 // Visits - get visits for given URL
 func Visits(u *url.URL) (uint64, error) {
 	if counter == nil {
 		// no, you didn't ...
-		panic("You need to register Visigo Counter first!")
+		panic("you need to register Visigo Counter first!")
 	}
 	if hll, found := counter[u.String()]; found {
-		return hll.Count(), nil
+		return hll.Estimate(), nil
 	}
 	return 0, ErrCount
 }
 
+// TotalVisits gets total visits to all sites
+func TotalVisits() (uint64, error) {
+	hll := hyperloglog.New()
+	for _, s := range counter {
+		if err := hll.Merge(s); err != nil {
+			return 0, err
+		}
+	}
+	return hll.Estimate(), nil
+}
+
 // Counter - registers middleware for visits counting
 func Counter(next http.Handler) http.Handler {
-	counter = make(map[string]*hyperloglog.HyperLogLogPlus)
+	counter = make(map[string]*hyperloglog.Sketch)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if hll, found := counter[r.URL.String()]; !found {
-			// get hyperloglog or fail silently
-			if l, err := hyperloglog.NewPlus(defaultPrecision); err == nil {
-				ip := &hashableIp{
-					realIp: []byte(realip.RealIP(r)),
-				}
-				l.Add(ip)
-				counter[r.URL.String()] = l
-			}
+		if hll, found := counter[r.URL.String()]; found {
+			hll.Insert([]byte(realip.RealIP(r)))
 		} else {
-			// it's perfectly fine to omit map assignment since it is a pointer
-			ip := &hashableIp{
-				realIp: []byte(realip.RealIP(r)),
-			}
-			hll.Add(ip)
+			l := hyperloglog.New()
+			l.Insert([]byte(realip.RealIP(r)))
+			counter[r.URL.String()] = l
 		}
-		// serve
 		next.ServeHTTP(w, r)
 	})
 }
